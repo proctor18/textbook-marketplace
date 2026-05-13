@@ -200,7 +200,7 @@ export async function signUp(_previousState: ListingActionState, formData: FormD
     return { ok: false, message: error.message };
   }
 
-  return { ok: true, message: "Account created. You can sign in now." };
+  return { ok: true, message: "Account created. Check your email to confirm your account before signing in." };
 }
 
 export async function signOut() {
