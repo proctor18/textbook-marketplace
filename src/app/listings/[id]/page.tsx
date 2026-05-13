@@ -5,14 +5,12 @@ import { MessageCircle } from "lucide-react";
 import { startConversation } from "@/app/actions";
 import { HeaderNav } from "@/components/HeaderNav";
 import { formatCondition, formatPrice } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserOrNull } from "@/lib/supabase/server";
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getUserOrNull(supabase);
 
   const { data: listing, error } = await supabase
     .from("marketplace_items")

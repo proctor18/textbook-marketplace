@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { signIn, signUp, type ListingActionState } from "@/app/actions";
@@ -15,7 +16,7 @@ export function AuthForms() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <form action={signInAction} className="grid gap-4 rounded-lg border border-black/10 bg-white p-5 shadow-soft">
+      <form noValidate action={signInAction} className="grid gap-4 rounded-lg border border-black/10 bg-white p-5 shadow-soft">
         <div>
           <h2 className="text-lg font-semibold text-ink">Sign in</h2>
           <p className="mt-1 text-sm text-ink/65">Manage listings and edit your profile.</p>
@@ -33,10 +34,15 @@ export function AuthForms() {
             {signInState.message}
           </p>
         ) : null}
-        <button className="h-11 rounded-md bg-ink px-4 text-sm font-semibold text-white">Sign in</button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link href="/auth/reset-password" className="text-sm font-medium text-moss hover:text-moss/80">
+            Forgot password?
+          </Link>
+          <button type="submit" className="h-11 rounded-md bg-ink px-4 text-sm font-semibold text-white">Sign in</button>
+        </div>
       </form>
 
-      <form action={signUpAction} className="grid gap-4 rounded-lg border border-black/10 bg-white p-5 shadow-soft">
+      <form noValidate action={signUpAction} className="grid gap-4 rounded-lg border border-black/10 bg-white p-5 shadow-soft">
         <div>
           <h2 className="text-lg font-semibold text-ink">Create account</h2>
           <p className="mt-1 text-sm text-ink/65">New sellers get a profile and owned listings.</p>
@@ -59,12 +65,16 @@ export function AuthForms() {
           Password
           <input name="password" required minLength={6} type="password" className="h-11 rounded-md border border-black/15 px-3" />
         </label>
+        <label className="grid gap-1 text-sm font-medium text-ink">
+          Confirm password
+          <input name="confirmPassword" required minLength={6} type="password" className="h-11 rounded-md border border-black/15 px-3" />
+        </label>
         {signUpState.message ? (
           <p className={`rounded-md px-3 py-2 text-sm ${signUpState.ok ? "bg-moss/10 text-moss" : "bg-coral/10 text-coral"}`}>
             {signUpState.message}
           </p>
         ) : null}
-        <button className="h-11 rounded-md bg-moss px-4 text-sm font-semibold text-white">Create account</button>
+        <button type="submit" className="h-11 rounded-md bg-moss px-4 text-sm font-semibold text-white">Create account</button>
       </form>
     </div>
   );

@@ -29,3 +29,15 @@ export async function createClient() {
     }
   );
 }
+
+export async function getUserOrNull(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    return user;
+  } catch {
+    return null;
+  }
+}

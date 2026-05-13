@@ -3,14 +3,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { HeaderNav } from "@/components/HeaderNav";
 import { MessageThread } from "@/components/MessageThread";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserOrNull } from "@/lib/supabase/server";
 
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getUserOrNull(supabase);
 
   if (!user) {
     redirect("/auth");

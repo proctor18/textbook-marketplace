@@ -2,13 +2,11 @@ import { redirect } from "next/navigation";
 
 import { HeaderNav } from "@/components/HeaderNav";
 import { ProfileForm } from "@/components/ProfileForm";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserOrNull } from "@/lib/supabase/server";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getUserOrNull(supabase);
 
   if (!user) {
     redirect("/auth");

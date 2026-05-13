@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
 
@@ -26,6 +27,10 @@ export type ListingActionState = {
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
+}
+
+function isRateLimitError(message: string) {
+  return message.toLowerCase().includes("rate limit");
 }
 
 function optionalString(value: FormDataEntryValue | null) {
@@ -167,7 +172,12 @@ export async function signIn(_previousState: ListingActionState, formData: FormD
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { ok: false, message: error.message };
+    return {
+      ok: false,
+      message: isRateLimitError(error.message)
+        ? "Email sending is temporarily rate limited. Wait a few minutes and try again."
+        : error.message
+    };
   }
 
   redirect("/account/listings");
@@ -176,11 +186,16 @@ export async function signIn(_previousState: ListingActionState, formData: FormD
 export async function signUp(_previousState: ListingActionState, formData: FormData) {
   const email = optionalString(formData.get("email"));
   const password = optionalString(formData.get("password"));
+  const confirmPassword = optionalString(formData.get("confirmPassword"));
   const firstName = optionalString(formData.get("firstName"));
   const lastName = optionalString(formData.get("lastName"));
 
-  if (!firstName || !lastName || !email || !password) {
-    return { ok: false, message: "Enter your first name, last name, email, and password." };
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    return { ok: false, message: "Enter your first name, last name, email, password, and confirmed password." };
+  }
+
+  if (password !== confirmPassword) {
+    return { ok: false, message: "Passwords do not match." };
   }
 
   const supabase = await createClient();
@@ -201,6 +216,44 @@ export async function signUp(_previousState: ListingActionState, formData: FormD
   }
 
   return { ok: true, message: "Account created. Check your email to confirm your account before signing in." };
+}
+
+export async function requestPasswordReset(_previousState: ListingActionState, formData: FormData) {
+  const email = optionalString(formData.get("email"));
+
+  if (!email) {
+    return { ok: false, message: "Enter your email address." };
+  }
+
+  const headerStore = await headers();
+  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/update-password`
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: "Password reset email sent. Check your inbox for the reset link." };
+}
+
+export async function updatePassword(_previousState: ListingActionState, formData: FormData) {
+  const password = optionalString(formData.get("password"));
+
+  if (!password || password.length < 6) {
+    return { ok: false, message: "Enter a new password with at least 6 characters." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: "Password updated. You can use your new password now." };
 }
 
 export async function signOut() {

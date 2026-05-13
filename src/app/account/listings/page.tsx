@@ -5,13 +5,11 @@ import { deleteListing } from "@/app/actions";
 import { HeaderNav } from "@/components/HeaderNav";
 import { ListingForm } from "@/components/ListingForm";
 import { formatCondition, formatPrice } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserOrNull } from "@/lib/supabase/server";
 
 export default async function MyListingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getUserOrNull(supabase);
 
   if (!user) {
     redirect("/auth");
